@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Social Tracker</title>
+    <link rel="stylesheet" href="popup.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+    <div>
+        <h1>📊 Social Tracker AXIAN GROUP</h1>
+        <span>Suivi mensuel des abonnés</span>
+    </div>
+    <button class="btn btn-primary" id="btn-collecter" onclick="collecter()">
+        ↻ Collecter
+    </button>
+</div>
+
+<!-- ── Status ── -->
+<div class="status">
+    <div class="dot" id="status-dot"></div>
+    <span id="status-text">Chargement...</span>
+</div>
+
+<!-- ── Filtres ── -->
+<div class="filtres">
+    <label>Filtrer :</label>
+    <select id="filtre-pays" onchange="appliquerFiltres()">
+        <option value="tous">Tous les pays</option>
+    </select>
+    <select id="filtre-pole" onchange="appliquerFiltres()">
+        <option value="tous">Tous les pôles</option>
+    </select>
+    <select id="filtre-mois" onchange="appliquerFiltres()">
+        <option value="dernier">Dernier mois</option>
+    </select>
+</div>
+
+<!-- ── Contenu ── -->
+<div class="content">
+
+    <!-- Graphique -->
+    <div class="chart-wrap">
+        <div class="chart-title">Évolution des abonnés</div>
+        <canvas id="monGraphique" height="140"></canvas>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-wrap">
+        <div class="scroll-area">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Société</th>
+                        <th>Pays</th>
+                        <th>Facebook</th>
+                        <th>Instagram</th>
+                        <th>LinkedIn</th>
+                        <th>YouTube</th>
+                        <th>TikTok</th>
+                        <th>Twitter</th>
+                    </tr>
+                </thead>
+                <tbody id="tableau-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Export -->
+    <div class="export-bar">
+        <button class="btn btn-csv" onclick="doExportCSV()">↓ Export CSV</button>
+        <button class="btn btn-excel" onclick="doExportExcel()">↓ Export Excel</button>
+    </div>
+
+</div>
+
+<script type="module" src="src/popup.js"></script>
+</body>
+</html>

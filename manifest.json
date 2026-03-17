@@ -1,0 +1,53 @@
+{
+    "manifest_version": 3,
+    "name": "Mon Social Tracker",
+    "version": "1.0",
+    "description": "Suivi mensuel des abonnés des pages social media",
+
+    "permissions": [
+        "storage",
+        "alarms"
+    ],
+
+    "host_permissions": [
+        "https://graph.facebook.com/*",
+        "https://graph.instagram.com/*",
+        "https://api.linkedin.com/*",
+        "https://www.googleapis.com/*",
+        "https://www.tiktok.com/*",
+        "https://api.twitter.com/*"
+    ],
+
+    "background": {
+        "service_worker": "src/background.js",
+        "type": "module"
+    },
+
+    "action": {
+        "default_popup": "popup.html"
+    },
+
+    "content_scripts": [
+        {
+            "matches": ["https://www.tiktok.com/@*"],
+            "js":      ["src/content_tiktok.js"],
+            "run_at":  "document_idle"
+        },
+        {
+            "matches": ["https://www.facebook.com/*"],
+            "js":      ["src/content_facebook.js"],
+            "run_at":  "document_idle"
+        },
+        {
+            "matches": ["https://www.instagram.com/*"],
+            "js":      ["src/content_instagram.js"],
+            "run_at":  "document_idle"
+        },
+        {
+        "matches": ["https://twitter.com/*", "https://x.com/*"],
+        "js":      ["src/content_x.js"],
+        "run_at":  "document_idle"
+        }
+
+    ]
+}
