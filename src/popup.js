@@ -8,6 +8,19 @@ let graphique        = null
 
 // ── Chargement initial ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ✅ Bouton Collecter
+    document.getElementById('btn-collecter').addEventListener('click', collecter)
+
+    // ✅ Filtres
+    document.getElementById('filtre-pays').addEventListener('change', applyFilter)
+    document.getElementById('filtre-pole').addEventListener('change', applyFilter)
+    document.getElementById('filtre-mois').addEventListener('change', applyFilter)
+
+    // ✅ Boutons Export
+    document.getElementById('btn-export-csv').addEventListener('click', () => exportCSV(tousLesSnapshots))
+    document.getElementById('btn-export-excel').addEventListener('click', () => exportExcel(tousLesSnapshots))
+
     loadData()
 })
 
@@ -66,22 +79,31 @@ function applyFilter() {
 
     let resultats = snapshot.resultats
 
-    // Filtrer par pays
     if (pays !== 'tous') {
         resultats = resultats.filter(e => e.pays === pays)
     }
 
-    // Filtrer par pôle
     if (pole !== 'tous') {
         resultats = resultats.filter(e => e.pole === pole)
     }
 
-    displayTable(resultats, mois)
+    displayErray(resultats, mois)
     displayGraph(resultats, mois)
 }
 
+// ── Sanitizer les données avant affichage ────────────────────────────
+function sanitize(texte) {
+    if (!texte) return ''
+    return String(texte)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
+
 // ── Afficher le tableau ──────────────────────────────────────────────
-function displayTable(resultats, mois) {
+function displayErray(resultats, mois) {
     const body = document.getElementById('tableau-body')
 
     if (!resultats.length) {
@@ -94,14 +116,12 @@ function displayTable(resultats, mois) {
         return
     }
 
-    // Trouver le mois précédent pour l'évolution
     const moisTries = Object.keys(tousLesSnapshots).sort()
     const idx       = moisTries.indexOf(mois)
     const moisPrec  = idx > 0 ? moisTries[idx - 1] : null
 
     body.innerHTML = resultats.map(entite => {
 
-        // Trouver la même société dans le mois précédent
         const entitePrec = moisPrec
             ? tousLesSnapshots[moisPrec]?.resultats?.find(
                 e => e.societe === entite.societe && e.pays === entite.pays
@@ -109,8 +129,8 @@ function displayTable(resultats, mois) {
             : null
 
         return `<tr>
-            <td><strong>${entite.societe}</strong></td>
-            <td>${entite.pays}</td>
+            <td><strong>${sanitize(entite.societe)}</strong></td>
+            <td>${sanitize(entite.pays)}</td>
             ${displayCellule(entite.facebook?.abonnes,  entitePrec?.facebook?.abonnes)}
             ${displayCellule(entite.instagram?.abonnes, entitePrec?.instagram?.abonnes)}
             ${displayCellule(entite.linkedin?.abonnes,  entitePrec?.linkedin?.abonnes)}
@@ -150,7 +170,6 @@ function displayGraph(resultats, moisActuel) {
             const e = tousLesSnapshots[m]?.resultats?.find(
                 r => r.societe === entite.societe && r.pays === entite.pays
             )
-            // Total de tous les réseaux sociaux
             return [
                 e?.facebook?.abonnes,
                 e?.instagram?.abonnes,
@@ -199,7 +218,7 @@ function displayGraph(resultats, moisActuel) {
 }
 
 // ── Collecter maintenant ─────────────────────────────────────────────
-window.collecter = async () => {
+async function collecter() {
     const btn = document.getElementById('btn-collecter')
     btn.disabled = true
     setStatus('Collecte en cours...', 'loading')
@@ -214,10 +233,6 @@ window.collecter = async () => {
         setStatus('Erreur lors de la collecte', 'error')
     }
 }
-
-// ── Export ───────────────────────────────────────────────────────────
-window.doExportCSV   = () => exportCSV(tousLesSnapshots)
-window.doExportExcel = () => exportExcel(tousLesSnapshots)
 
 // ── Utilitaires ──────────────────────────────────────────────────────
 function displayNone() {

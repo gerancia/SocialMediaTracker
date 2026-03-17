@@ -1,5 +1,5 @@
 
-    const CONFIG = {
+    export const CONFIG = {
         entites: [
     {
         "pays": "madagascar",
@@ -61,7 +61,7 @@
         "facebook": "MvolaMobileMoney",
         "linkedin": "mvola-madagascar",
         "instagram": "mvola madagascar",
-        "youtube": "mvolamadagacar",
+        "youtube": "mvolamadagascar",
         "tiktok": "mvola madagascar",
         "X": "",
         "actif": "true"
@@ -256,7 +256,7 @@
         "facebook": "YasInTanzania",
         "linkedin": "yas-tanzania",
         "instagram": "yastanzania",
-        "youtube": "Yas tanzania",
+        "youtube": "Yas_tanzania",
         "tiktok": "yas tanzania",
         "X": "YasTanzania",
         "actif": "true"
@@ -282,7 +282,7 @@
         "facebook": "61578518121102",
         "linkedin": "mixx-tanzania",
         "instagram": "mixx.tz",
-        "youtube": "Mixx Tanzania",
+        "youtube": "Mixx_Tanzania",
         "tiktok": "",
         "X": "",
         "actif": "true"
@@ -295,7 +295,7 @@
         "facebook": "yasintogo",
         "linkedin": "yas togo",
         "instagram": "yas togo",
-        "youtube": "yas tg",
+        "youtube": "yas_tg",
         "tiktok": "yas togo",
         "X": "YasTogo",
         "actif": "true"
@@ -334,7 +334,7 @@
         "facebook": "Yascomores",
         "linkedin": "yas-comores",
         "instagram": "yas comores",
-        "youtube": "yas comores",
+        "youtube": "yas_comores",
         "tiktok": "yas comores",
         "X": "",
         "actif": "true"
@@ -511,9 +511,7 @@
 ],
 
         tokens: {
-            linkedin: "",
-            youtube: "",
-            X: "",
+            youtube: ""
         }
     };
     

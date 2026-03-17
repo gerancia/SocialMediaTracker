@@ -47,6 +47,11 @@
         "matches": ["https://twitter.com/*", "https://x.com/*"],
         "js":      ["src/content_x.js"],
         "run_at":  "document_idle"
+        },
+        {
+            "matches": ["https://linkedin.com/companu/*"],
+            "js":      ["src/content_linkedin.js"],
+            "run_at":  "document_idle"
         }
 
     ]

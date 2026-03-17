@@ -1,15 +1,11 @@
-// src/background.js
-
 import { CONFIG } from '../config.js'
 import { getYoutubeAbonnes }   from './api_youtube.js'
-import { getLinkedinAbonnes }  from './api_linkedin.js'
-// import { getXAbonnes }   from './api_x.js'
 
 // ── Installation ─────────────────────────────────────────────────────
 chrome.runtime.onInstalled.addListener(() => {
     console.log('[SocialTracker] Extension installée ✅')
 
-    // Alarme mensuelle pour YouTube, LinkedIn, Twitter
+    // Alarme mensuelle pour YouTube
     chrome.alarms.create('collecte-mensuelle', {
         periodInMinutes: 60 * 24 * 30
     })
@@ -57,35 +53,12 @@ async function collecter() {
             }
         }
 
-        // LinkedIn
-        if (entite.linkedin) {
-            try {
-                donnees.linkedin = await getLinkedinAbonnes(
-                    entite.linkedin,
-                    CONFIG.tokens.linkedin
-                )
-            } catch (e) {
-                console.error(`[SocialTracker] LinkedIn erreur ${entite.entite}:`, e)
-            }
-        }
-
-        // X
-        // if (entite.x) {
-        //     try {
-        //         donnees.x = await getXAbonnes(
-        //             entite.x,
-        //             CONFIG.tokens.x
-        //         )
-        //     } catch (e) {
-        //         console.error(`[SocialTracker] Twitter erreur ${entite.entite}:`, e)
-        //     }
-        // }
-
-        // Facebook, Instagram, TikTok → récupérés depuis temp storage
+        // linkedin, Facebook, Instagram, TikTok → récupérés depuis temp storage
+        donnees.linkedin  = await getTempData('linkedin_temp',  entite.linkedin)
         donnees.facebook  = await getTempData('facebook_temp',  entite.facebook)
         donnees.instagram = await getTempData('instagram_temp', entite.instagram)
         donnees.tiktok    = await getTempData('tiktok_temp',    entite.tiktok)
-        donnees.x = await getTempData('twitter_temp', entite.x)
+        donnees.twitter = await getTempData('twitter_temp', entite.X)
 
         resultats.push(donnees)
     }
@@ -137,13 +110,19 @@ function sauvegarder(mois, resultats) {
 // ── Messages depuis popup.js et content scripts ──────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-    // Bouton "Collecter maintenant" depuis le popup
+    // ── Vérifier l'origine du message ────────────────────────────
+    if (sender.id !== chrome.runtime.id) {
+        console.warn('[SocialTracker] Message rejeté — origine inconnue')
+        return
+    }
+
+    // ── Bouton Collecter maintenant ──────────────────────────────
     if (message.type === 'COLLECTER_MAINTENANT') {
         collecter().then(() => sendResponse({ ok: true }))
         return true
     }
 
-    // Données GET depuis popup
+    // ── GET_DATA ─────────────────────────────────────────────────
     if (message.type === 'GET_DATA') {
         chrome.storage.local.get('snapshots', (data) => {
             sendResponse({ snapshots: data.snapshots || {} })
@@ -151,60 +130,69 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true
     }
 
-    // ── Content Scripts ──────────────────────────────────────────
-
-    // Facebook
+    // ── Facebook ─────────────────────────────────────────────────
     if (message.type === 'FACEBOOK_DATA') {
-        console.log(`[SocialTracker] Facebook : ${message.nomPage} → ${message.abonnes}`)
-        chrome.storage.local.get('facebook_temp', (data) => {
-            const temp = data.facebook_temp || {}
-            temp[message.nomPage] = {
-                abonnes:    message.abonnes,
-                collecteAt: message.collecteAt
-            }
-            chrome.storage.local.set({ facebook_temp: temp })
-        })
+        if (!validerMessage(message, 'nomPage')) return
+        sauvegarderTemp('facebook_temp', message.nomPage, message.abonnes, message.collecteAt)
     }
 
-    // Instagram
+    // ── Instagram ────────────────────────────────────────────────
     if (message.type === 'INSTAGRAM_DATA') {
-        console.log(`[SocialTracker] Instagram : @${message.username} → ${message.abonnes}`)
-        chrome.storage.local.get('instagram_temp', (data) => {
-            const temp = data.instagram_temp || {}
-            temp[message.username] = {
-                abonnes:    message.abonnes,
-                collecteAt: message.collecteAt
-            }
-            chrome.storage.local.set({ instagram_temp: temp })
-        })
+        if (!validerMessage(message, 'username')) return
+        sauvegarderTemp('instagram_temp', message.username, message.abonnes, message.collecteAt)
     }
 
-    // TikTok
+    // ── TikTok ───────────────────────────────────────────────────
     if (message.type === 'TIKTOK_DATA') {
-        console.log(`[SocialTracker] TikTok : @${message.username} → ${message.abonnes}`)
-        chrome.storage.local.get('tiktok_temp', (data) => {
-            const temp = data.tiktok_temp || {}
-            temp[message.username] = {
-                abonnes:    message.abonnes,
-                collecteAt: message.collecteAt
-            }
-            chrome.storage.local.set({ tiktok_temp: temp })
-        })
-    }
-    // X
-    if (message.type === 'TWITTER_DATA') {
-        console.log(`[SocialTracker] Twitter : @${message.username} → ${message.abonnes}`)
-        chrome.storage.local.get('twitter_temp', (data) => {
-            const temp = data.twitter_temp || {}
-            temp[message.username] = {
-                abonnes:    message.abonnes,
-                collecteAt: message.collecteAt
-            }
-            chrome.storage.local.set({ twitter_temp: temp })
-        })
+        if (!validerMessage(message, 'username')) return
+        sauvegarderTemp('tiktok_temp', message.username, message.abonnes, message.collecteAt)
     }
 
+    // ── Twitter ──────────────────────────────────────────────────
+    if (message.type === 'TWITTER_DATA') {
+        if (!validerMessage(message, 'username')) return
+        sauvegarderTemp('twitter_temp', message.username, message.abonnes, message.collecteAt)
+    }
+    // Likedin
+    if (message.type === 'LINKEDIN_DATA') {
+        if (!validerMessage(message, 'nomPage')) return
+            sauvegarderTemp('linkedin_temp', message.nomPage, message.abonnes, message.collecteAt)
+    }
 })
+
+
+// ── Valider les données reçues ───────────────────────────────────────
+function validerMessage(message, cleNom) {
+    // Vérifier le nom de la page
+    if (!message[cleNom] || typeof message[cleNom] !== 'string') {
+        console.warn('[SocialTracker] Données invalides — nom manquant')
+        return false
+    }
+
+    // Vérifier le nombre d'abonnés
+    if (!message.abonnes || typeof message.abonnes !== 'number') {
+        console.warn('[SocialTracker] Données invalides — abonnés manquants')
+        return false
+    }
+
+    // Vérifier que le nombre est réaliste
+    if (message.abonnes < 0 || message.abonnes > 1_000_000_000) {
+        console.warn('[SocialTracker] Données invalides — nombre hors limites')
+        return false
+    }
+
+    return true
+}
+
+
+// ── Sauvegarder les données temp ─────────────────────────────────────
+function sauvegarderTemp(cle, nomPage, abonnes, collecteAt) {
+    chrome.storage.local.get(cle, (data) => {
+        const temp = data[cle] || {}
+        temp[nomPage] = { abonnes, collecteAt }
+        chrome.storage.local.set({ [cle]: temp })
+    })
+}
 
 // ── Utilitaires ──────────────────────────────────────────────────────
 function getMoisActuel() {
